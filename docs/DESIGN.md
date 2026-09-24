@@ -37,7 +37,7 @@ With 30 people in a room, every failure mode becomes a queue of raised hands. So
 | `template.html` | Students | The Developer Trading Card; copied to `YOUR-USERNAME.html` |
 | `template.md` | Students | Plain-text fallback card; copied to `YOUR-USERNAME.md` |
 | `.gitignore` | — | Ignores `.DS_Store`, `Thumbs.db`, `.vscode/` |
-| `.devcontainer/devcontainer.json` | Codespaces | Default universal image + Live Preview extension |
+| `.devcontainer/devcontainer.json` | Codespaces | Codespaces' default image (`universal:linux`) + Live Preview extension + port 8000 preview |
 | `.github/pull_request_template.md` | Students (auto) | Checklist pre-filled into every PR description |
 | `.agents/skills/profile-card/SKILL.md` | AI agents | Cross-tool skill: how an AI builds a student's card |
 | `.agents/skills/profile-card/scripts/check_card.py` | AI agents, students | Validates a card before commit (stdlib only) |
@@ -120,7 +120,7 @@ The README is written in a beginner voice, numbered 1–10, each step with a one
 | 3 | Open a Codespace on your fork | Check the URL contains your username; Code → Codespaces → Create codespace on main |
 | 4 | Create your branch | `git checkout -b profile-YOUR-USERNAME` + example |
 | 5 | Make your card | `cp template.html YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; "Make my profile card" for AI agents (skill); hand-edit fallback; `.md` alternative |
-| 6 | Preview your card | Command Palette → **Live Preview: Show Preview**; fallback `python3 -m http.server 8000` |
+| 6 | Preview your card | Command Palette → **Live Preview: Show Preview**; fallback `python3 -m http.server 8000` opens a **Card preview** panel automatically |
 | 7 | Commit and push | `git status` first; `git add YOUR-USERNAME.html` (not `git add .`); commit; `git push origin profile-YOUR-USERNAME`; explains `origin` = your fork |
 | 8 | Open the pull request | Compare & pull request banner (fallback: Contribute → Open pull request); base = instructor `main`, head = fork branch; title `Add YOUR-USERNAME profile`; gallery note |
 | 9 | Rules | Add only your own file; don't edit templates, `index.html`, or others' files |
@@ -155,7 +155,33 @@ Note: the original workshop spec contained its own prompt text that was not avai
 `git add .` silently stages an accidental edit to `template.html`, after which the plain `git restore template.html` fix no longer works (the change is staged). Explicit staging enforces the "only your file" rule and teaches what the staging area is for. `git status` before committing is the single most valuable habit this workshop can teach.
 
 ### Why a devcontainer
-The Live Preview extension (`ms-vscode.live-server`) is not guaranteed in a default Codespace, and "Show Preview" alone only exists for Markdown. `.devcontainer/devcontainer.json` pins the same image Codespaces uses by default (`mcr.microsoft.com/devcontainers/universal:2`) and adds the extension. This is configuration, not a dependency, so the zero-setup promise holds. `python3 -m http.server 8000` (Python ships in the universal image) is the fallback.
+The Live Preview extension (`ms-vscode.live-server`) is not guaranteed in a default Codespace, and "Show Preview" alone only exists for Markdown. `.devcontainer/devcontainer.json` adds the extension. This is configuration, not a dependency, so the zero-setup promise holds.
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `image` | `mcr.microsoft.com/devcontainers/universal:linux` | This is the tag Codespaces uses as its default image (Sept 2026: same digest as `latest`, `6`, `6.1.7`). Tracking the default keeps it **cached** on Codespaces hosts (fast creation for 30 students at once) and **free of storage charges** (see below), even after a new major version ships. A major bump is low-risk here: the workshop needs only `python3` and `git`. Includes Python 3.14, git, node, `gh`, and the Copilot CLI. |
+| `portsAttributes."8000"` | `label: "Card preview"`, `onAutoForward: "openPreview"` | When a student runs the `python3 -m http.server 8000` fallback, the port is labeled and a preview panel opens **inside the editor** automatically — no pop-up to miss, no URL to edit. |
+| `customizations.vscode.extensions` | `["ms-vscode.live-server"]` | Live Preview for README §6. |
+
+**History:** the first version pinned `universal:2`. By Sept 2026 that was four major versions old and a different digest from the default, so Codespaces would have pulled a separate, large, uncached image. It was briefly `universal:6`, then changed to `universal:linux` so it can't drift from the default again.
+
+**Why not the smaller `mcr.microsoft.com/devcontainers/python` image?** Checked Sept 2026:
+
+| | `universal:linux` | `python:3` |
+| --- | --- | --- |
+| Compressed size (amd64) | 4.01 GB, but already cached on Codespaces hosts | 0.65 GB, pulled for every codespace |
+| Storage billed to students | None: "storage of base dev containers built from the default dev container image is free of charge" (identified by `Definition ID: universal`; the image's `dev.containers.id` label is `universal`) | "If you use an alternative base image, then the resulting container and all of the files in the codespace will be counted as used storage" |
+| Tools | python3, git, node, `gh`, Copilot CLI | python3, git, node; no `gh` or Copilot CLI |
+| Extensions it adds | GitHub Pull Requests | Python, Pylance, autopep8, ESLint (irrelevant to an HTML workshop) |
+
+Python is only used for `http.server` and `check_card.py`, which `universal` covers. A Python-specific image would only make sense if the workshop wrote Python.
+
+**Deliberately not added:**
+- Copilot extensions — Codespaces provides Copilot to users who have access; `GitHub.copilot` has not been updated since Oct 2025, so pinning extension IDs risks installing a superseded one.
+- `forwardPorts` — `portsAttributes` applies when the port is auto-detected, so nothing is forwarded until the student actually starts the server.
+- `postCreateCommand`, features, `hostRequirements` — nothing to install; the default 2-core machine is plenty and conserves students' free Codespaces hours.
+
+**Re-check before each term:** run [REBUILD.md §6.7](REBUILD.md#67-devcontainer-image-check) to see which version `universal:linux` currently is, and rehearse in a real Codespace.
 
 ### Troubleshooting table (README §10)
 | Problem | Fix |
@@ -310,3 +336,4 @@ Stdlib-only validator; exits 0 with `OK: NAME looks good`, or prints each proble
 3. **Applied** 1–5, then built 6 and 7, then wrote these docs (commit `1d51382`).
 4. **Cross-tool AI skill** (§7): `.agents/skills/profile-card/` + Claude symlink + `AGENTS.md`; `AGENTS.md` added to `build_index.py`'s skip list so it never appears as a gallery card.
 5. **Repo name fix:** the GitHub repo is `uwb-css-bootup/profiles-2026`, but README §2 said forks would be at `…/profiles-fall-2026`. The student-facing text now says `profiles-2026`; the skill no longer hardcodes a repo name.
+6. **Devcontainer update:** `universal:2` → `universal:6` → `universal:linux` (tracks Codespaces' cached, storage-free default; `python` image evaluated and rejected); added port 8000 `Card preview` auto-preview; README §6 fallback text updated to match. Validated with `@devcontainers/cli read-configuration` and the spec schema.

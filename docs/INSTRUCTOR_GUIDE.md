@@ -43,9 +43,9 @@ Codespace creation and Copilot sign-in are the two biggest time sinks if done li
 Walk the student README top to bottom as a student would. Tick each item:
 
 - [ ] Fork works; fork URL is `github.com/SECOND-ACCOUNT/profiles-2026`
-- [ ] Codespace on the fork builds with the devcontainer (Live Preview extension installed)
+- [ ] Codespace on the fork builds quickly with the devcontainer (`universal:linux` image, Live Preview extension installed)
 - [ ] Command Palette → **Live Preview: Show Preview** exists and shows the card
-- [ ] `python3 -m http.server 8000` fallback: port-forward pop-up appears; `/YOUR-USERNAME.html` loads
+- [ ] `python3 -m http.server 8000` fallback: a **Card preview** panel opens in the editor; clicking `YOUR-USERNAME.html` shows the card
 - [ ] Copilot Chat with the README prompt edits **only** the open file (note what the Apply button / mode picker are actually called and fix the README if needed)
 - [ ] Copilot **Agent mode**: "Make my profile card" triggers the `profile-card` skill (from `.agents/skills/`); it creates only the student's file, runs `check_card.py`, and does **not** commit or push
 - [ ] If available, repeat with Gemini CLI or Claude Code in the Codespace terminal

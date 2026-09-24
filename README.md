@@ -77,7 +77,7 @@ Prefer plain text? Use `cp template.md YOUR-USERNAME.md` instead and edit that f
 
 Your card appears in a panel next to the code and updates as you save.
 
-*Fallback:* in the terminal, run `python3 -m http.server 8000`, click **Open in Browser** in the pop-up, then add `/YOUR-USERNAME.html` to the end of the URL. Press `Ctrl+C` in the terminal to stop the server.
+*Fallback:* in the terminal, run `python3 -m http.server 8000`. A **Card preview** panel opens inside the editor with a list of files — click `YOUR-USERNAME.html`. (No panel? Open the **Ports** tab at the bottom and click the globe icon next to port 8000.) Press `Ctrl+C` in the terminal to stop the server.
 
 ## 7. Commit and push
 

@@ -94,13 +94,19 @@ SHA-256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 
 ### `.devcontainer/devcontainer.json`
 
-SHA-256: `ba3f25cbf8520708651eb301a65dbea4251e088fd765bdffa97e1447dc0c5ba5`
+SHA-256: `31507900a288b27a009e8a2280185029b1b48859c3c031b1bae688a4d03fb05f`
 
 <!-- FILE: .devcontainer/devcontainer.json -->
 ````json
 {
   "name": "Profiles Gallery",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "image": "mcr.microsoft.com/devcontainers/universal:linux",
+  "portsAttributes": {
+    "8000": {
+      "label": "Card preview",
+      "onAutoForward": "openPreview"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": ["ms-vscode.live-server"]
@@ -347,7 +353,7 @@ Always, for everyone:
 
 ### `README.md`
 
-SHA-256: `c6371283e9d05aafcb36d2d32a43b810a4eb2a28a1f64a9b6cecc60a366ecbee`
+SHA-256: `d240d30fb5562d964163eb957f2e3468348c4a9d04e6fcd9bee5d464f22e73b5`
 
 <!-- FILE: README.md -->
 ````markdown
@@ -430,7 +436,7 @@ Prefer plain text? Use `cp template.md YOUR-USERNAME.md` instead and edit that f
 
 Your card appears in a panel next to the code and updates as you save.
 
-*Fallback:* in the terminal, run `python3 -m http.server 8000`, click **Open in Browser** in the pop-up, then add `/YOUR-USERNAME.html` to the end of the URL. Press `Ctrl+C` in the terminal to stop the server.
+*Fallback:* in the terminal, run `python3 -m http.server 8000`. A **Card preview** panel opens inside the editor with a list of files — click `YOUR-USERNAME.html`. (No panel? Open the **Ports** tab at the bottom and click the globe icon next to port 8000.) Press `Ctrl+C` in the terminal to stop the server.
 
 ## 7. Commit and push
 
@@ -987,3 +993,15 @@ CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
   --window-size=1280,900 "file://$PWD/template.html"
 ```
 Expected: a dark navy page with one centered 380px card, sky-blue border, "Your Name", "Computer Science '27" in blue, bio, "TECH STACK" label with three pill badges (Python, JavaScript, Git), and an italic grey fun fact. Headless Chrome clamps very narrow windows, so for a true 390px mobile check load the card inside a 390px-wide `<iframe>` instead.
+
+### 6.7 Devcontainer image check
+`devcontainer.json` uses `universal:linux`, the tag Codespaces uses as its default, so it stays cached and storage-free. To see which version that currently is:
+```bash
+for tag in linux latest; do
+  printf "%-6s " "$tag"
+  curl -sI -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json" \
+    "https://mcr.microsoft.com/v2/devcontainers/universal/manifests/$tag" | grep -i "^docker-content-digest"
+done
+npx -y @devcontainers/cli read-configuration --workspace-folder .   # config parses
+```
+As of Sept 2026 both print `sha256:584e41561451c910dcd96221634be07545803aed9cd437a60288f06ddeaf5880` (version 6.1.7). If the major version has changed, rehearse in a real Codespace before class.

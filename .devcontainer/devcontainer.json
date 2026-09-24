@@ -1,6 +1,12 @@
 {
   "name": "Profiles Gallery",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "image": "mcr.microsoft.com/devcontainers/universal:linux",
+  "portsAttributes": {
+    "8000": {
+      "label": "Card preview",
+      "onAutoForward": "openPreview"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": ["ms-vscode.live-server"]
