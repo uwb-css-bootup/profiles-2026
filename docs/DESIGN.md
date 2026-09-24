@@ -1,0 +1,249 @@
+# Design Notes — Profiles Gallery (Fall 2026)
+
+Instructor-facing. Explains **what** is in this repo and **why** each decision was made.
+See also: [INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md) (running the class) and [REBUILD.md](REBUILD.md) (exact file contents to recreate the repo).
+
+---
+
+## 1. Context
+
+| | |
+| --- | --- |
+| Event | Live Git/GitHub workshop, UW Bothell, Fall 2026 |
+| Length | 90 minutes |
+| Audience | ~30 students, beginners with Git |
+| Deliverable per student | One merged pull request adding their own profile card |
+| Workflow | **Fork-based** — students have no write access to the instructor's repo |
+| Environment | GitHub Codespaces in the browser (nothing installed locally) |
+| AI assist | GitHub Copilot Chat, with a no-Copilot fallback |
+
+### Guiding principle: reliability beats cleverness
+
+With 30 people in a room, every failure mode becomes a queue of raised hands. So:
+
+- **Zero dependencies, no build step, no CI.** Nothing to install, nothing to break.
+- **Every student adds a unique new file** (`<their-username>.html`). No two PRs ever touch the same file, so merge conflicts are impossible by construction.
+- **Flat repo layout.** Everything students touch is at the root.
+- **Students only ever add one file.** Shared files (templates, README, gallery) are never edited by students.
+
+---
+
+## 2. Repository layout
+
+| Path | Audience | Purpose |
+| --- | --- | --- |
+| `README.md` | Students | Step-by-step workshop guide (10 numbered sections) |
+| `template.html` | Students | The Developer Trading Card; copied to `YOUR-USERNAME.html` |
+| `template.md` | Students | Plain-text fallback card; copied to `YOUR-USERNAME.md` |
+| `.gitignore` | — | Ignores `.DS_Store`, `Thumbs.db`, `.vscode/` |
+| `.devcontainer/devcontainer.json` | Codespaces | Default universal image + Live Preview extension |
+| `.github/pull_request_template.md` | Students (auto) | Checklist pre-filled into every PR description |
+| `build_index.py` | Instructor | Regenerates `index.html` from all student cards (stdlib only) |
+| `index.html` | Everyone (via Pages) | Generated gallery page; **never edited by hand** |
+| `.nojekyll` | GitHub Pages | Disables Jekyll so files are served as-is |
+| `docs/` | Instructor | These notes |
+
+Student files (added via PRs) live at the root: `octocat.html`, `mona.md`, etc.
+
+---
+
+## 3. The card: `template.html`
+
+### Constraints
+- Single file. `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="UTF-8">`, `<meta name="viewport" content="width=device-width, initial-scale=1">`.
+- All CSS in one `<style>` block. **No JavaScript, no web fonts, no external URLs** (the file contains no `http` at all). Renders identically offline, in Live Preview, and on GitHub Pages.
+- System font stack: `system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`.
+
+### Theme — five CSS custom properties in `:root`
+Changing this one block restyles the whole card (easy for students or Copilot):
+
+| Variable | Value | Used for |
+| --- | --- | --- |
+| `--bg` | `#0f172a` | Page background |
+| `--card` | `#1e293b` | Card background |
+| `--text` | `#f1f5f9` | Main text |
+| `--muted` | `#94a3b8` | Dividers, "Tech Stack" label, fun fact |
+| `--accent` | `#38bdf8` | Card border, role/major, badges |
+
+Contrast on the defaults: muted-on-card ≈ 5.7:1, accent-on-card ≈ 7:1 (both pass WCAG AA).
+
+### Layout
+- `body`: `display: grid; place-items: center; min-height: 100vh; padding: 1.5rem`.
+- `.card`: `width: 100%; max-width: 380px; border: 2px solid var(--accent); border-radius: 16px; padding: 1.75rem`, soft shadow. Responsive with **no media queries**.
+- Badges: `ul.tech-stack` is `display: flex; flex-wrap: wrap; gap: 0.5rem`, `list-style: none`; each `li.badge` is a pill (`border-radius: 999px`, accent border and text).
+- `* { box-sizing: border-box; }`.
+
+### Semantic structure and the five editable fields
+```
+<main>
+  <article class="card">
+    <header>
+      <h1 id="student-name" class="student-name">Your Name</h1>
+      <p id="role-or-major" class="role-or-major">Computer Science '27</p>
+    </header>
+    <section>
+      <p id="bio" class="bio">…</p>
+    </section>
+    <section>
+      <h2>Tech Stack</h2>
+      <ul id="tech-stack" class="tech-stack"><li class="badge">Python</li> …</ul>
+    </section>
+    <footer>
+      <p id="fun-fact" class="fun-fact">Fun fact: …</p>
+    </footer>
+  </article>
+</main>
+```
+- Each of the five fields (plus `<title>`) has a `<!-- ✏️ EDIT HERE: … -->` comment directly above it.
+- A banner comment at the very top says: *Copy this file to YOUR-USERNAME.html — do not edit template.html directly*, with the `cp` command and an `octocat` example.
+- Placeholder content is obviously fake ("Your Name", "Computer Science '27") so an unedited card is easy to spot in review.
+- The IDs exist so Copilot (and the verification script) can find fields reliably; the prompt tells Copilot to keep them.
+
+### `template.md`
+Same order and headings as the HTML card: `# Your Name`, a bold role/major line, bio paragraph, `## Tech Stack` with inline-code badges (`` `Python` `JavaScript` `Git` ``), `## Fun Fact`. Top HTML comment with copy instructions. For students whose Copilot isn't working or who prefer plain text.
+
+---
+
+## 4. Student README — design choices
+
+The README is written in a beginner voice, numbered 1–10, each step with a one-line italic **"Why:"** so students build a mental model, not just a click sequence.
+
+| # | Section | Key content |
+| --- | --- | --- |
+| 1 | What you'll do | Goal = a merged PR; `YOUR-USERNAME` convention with `octocat` example |
+| 2 | Fork the repository | Fork → Create fork |
+| 3 | Open a Codespace on your fork | Check the URL contains your username; Code → Codespaces → Create codespace on main |
+| 4 | Create your branch | `git checkout -b profile-YOUR-USERNAME` + example |
+| 5 | Make your card | `cp template.html YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; hand-edit fallback; `.md` alternative |
+| 6 | Preview your card | Command Palette → **Live Preview: Show Preview**; fallback `python3 -m http.server 8000` |
+| 7 | Commit and push | `git status` first; `git add YOUR-USERNAME.html` (not `git add .`); commit; `git push origin profile-YOUR-USERNAME`; explains `origin` = your fork |
+| 8 | Open the pull request | Compare & pull request banner (fallback: Contribute → Open pull request); base = instructor `main`, head = fork branch; title `Add YOUR-USERNAME profile`; gallery note |
+| 9 | Rules | Add only your own file; don't edit templates, `index.html`, or others' files |
+| 10 | Troubleshooting | 7-row table (below) |
+
+### Why `YOUR-USERNAME` instead of `<username>`
+The first draft used `<username>`. Students copy-paste commands, and in bash `<` is input redirection. Verified in bash:
+```
+$ git checkout -b profile-<username>
+bash: syntax error near unexpected token `newline'
+$ cp template.html <username>.html
+bash: username: No such file or directory
+```
+Neither error hints at the fix. `YOUR-USERNAME` is shell-safe, and each command is followed by a concrete `octocat` example. A troubleshooting row still covers the bracket error in case old habits leak in.
+
+### Why `cp` before Copilot
+The first draft asked Copilot to "copy template.html into a new file". That only works in Copilot's Agent/Edit modes; in the default Ask mode Copilot just prints code. It was also the main way `template.html` got modified by accident. Now the file copy is a deterministic terminal step, and Copilot is asked to edit **only the file that is open**.
+
+The Copilot prompt (verbatim in the README):
+```text
+Fill in my details in the file I have open. Only change this file.
+- Name: (your name)
+- Role or major: (e.g. Computer Science '27)
+- Bio: (1–3 sentences about you)
+- Tech stack: (languages and tools you use, one badge each)
+- Fun fact: (something fun about you)
+Keep the same HTML structure and element IDs. You may change the colors in the :root block to match my style.
+```
+Note: the original workshop spec contained its own prompt text that was not available when this was written. Replace the prompt above if you have the canonical one.
+
+### Why `git status` + `git add YOUR-USERNAME.html` instead of `git add .`
+`git add .` silently stages an accidental edit to `template.html`, after which the plain `git restore template.html` fix no longer works (the change is staged). Explicit staging enforces the "only your file" rule and teaches what the staging area is for. `git status` before committing is the single most valuable habit this workshop can teach.
+
+### Why a devcontainer
+The Live Preview extension (`ms-vscode.live-server`) is not guaranteed in a default Codespace, and "Show Preview" alone only exists for Markdown. `.devcontainer/devcontainer.json` pins the same image Codespaces uses by default (`mcr.microsoft.com/devcontainers/universal:2`) and adds the extension. This is configuration, not a dependency, so the zero-setup promise holds. `python3 -m http.server 8000` (Python ships in the universal image) is the fallback.
+
+### Troubleshooting table (README §10)
+| Problem | Fix |
+| --- | --- |
+| `syntax error near unexpected token` / `No such file or directory: username` | Brackets typed; use the real username |
+| `git status` shows `template.html` modified | `git restore template.html`; if already staged, `git restore --staged --worktree template.html` |
+| push rejected / permission denied / 403 | Codespace is on the original repo; accept a fork offer if shown, else fork, new Codespace on the fork, copy file over |
+| No Compare & pull request banner | Contribute → Open pull request |
+| Committed on `main` by accident | `git checkout -b profile-YOUR-USERNAME` keeps the commit; push the branch |
+| Live Preview command not found | `python3 -m http.server 8000` fallback |
+| PR shows changes to other files | Ask an instructor |
+
+---
+
+## 5. Pull request template
+
+`.github/pull_request_template.md` pre-fills every PR description with a four-item checklist:
+- only one file added (`YOUR-USERNAME.html` or `.md`)
+- filename matches GitHub username
+- card previewed
+- title is `Add YOUR-USERNAME profile`
+
+It is a **nudge at the moment of submission**, not enforcement. PR templates are read from the base repo's default branch.
+
+**Rejected:** a GitHub Action that fails PRs touching files other than one new card. It would work, but violates "no CI", and the PR's *Files changed* tab already exposes the problem during review.
+
+---
+
+## 6. Gallery
+
+### Goal
+The payoff moment: everyone sees their card on one shared page, projected at the end of class.
+
+### Design
+- **GitHub Pages** serves the repo root from `main`.
+- **`build_index.py`** (Python 3 standard library only; tested on 3.9) regenerates `index.html`. The instructor runs it after merging; students never touch `index.html`, so it can't cause conflicts.
+- Card discovery: every `*.html` / `*.md` file at the repo root **except** `index.html`, `template.html`, `template.md`, `README.md`. Sorted case-insensitively.
+- **HTML cards** are embedded as `<iframe sandbox src="NAME.html" loading="lazy">` in a responsive grid (`repeat(auto-fill, minmax(min(100%, 420px), 1fr))`), each 480px tall with the username as a caption link.
+- **Markdown cards** are shown as a dashed tile linking to GitHub's rendered view (`https://github.com/OWNER/REPO/blob/main/NAME.md`). The repo URL is derived from `git remote get-url origin` (SSH or HTTPS form); if there is no remote, the link falls back to the relative `.md` path.
+- Filenames are HTML-escaped and URL-quoted.
+- Empty state: "No cards yet — be the first to open a pull request!" and a "0 cards" count.
+- Gallery uses the same five-color palette as the card.
+- Output header comment: `<!-- Generated by build_index.py — do not edit by hand. -->`.
+
+### Why `sandbox` on the iframes
+Cards are served from the instructor's Pages origin. Without `sandbox`, a student's `<script>` could reach `window.top` and rewrite the gallery. `sandbox` with **no** `allow-*` flags blocks all scripts and gives the frame an opaque origin. Verified with a test card whose script rewrites both itself and `top`:
+- inside the gallery → card and gallery unchanged;
+- opened directly → the script ran ("GALLERY PWNED").
+
+So the sandbox is what protects the gallery. The caption link opens the raw card, where scripts *can* run, affecting only that card's own page — review PRs for `<script>` before merging.
+
+### Why `.nojekyll`
+Without it, GitHub Pages' Jekyll build converts `NAME.md` to `NAME.html` (via optional-front-matter), which could collide with or shadow files. With `.nojekyll`, files are served exactly as committed.
+
+### Rejected: client-side index using the GitHub API
+An `index.html` that lists files via the GitHub REST API needs no regeneration step, but unauthenticated API calls are limited to **60 requests/hour per IP**. Thirty students on campus Wi-Fi likely share one NAT IP, so the gallery would fail exactly when it's being shown.
+
+### Known trade-off
+Iframes are a fixed 480px tall (cards are ~410px). A very long bio scrolls inside its frame instead of growing it — chosen to keep the grid tidy. Increase `height: 480px` in two places in `build_index.py` if needed.
+
+---
+
+## 7. Verification that was performed
+
+| Check | Method | Result |
+| --- | --- | --- |
+| Template well-formedness | stdlib `html.parser`: five IDs each exactly once, every tag closed, no `http` | Pass |
+| Desktop render | Headless Chrome, 1280×900 | Card centered, badges wrap |
+| Mobile render | Headless Chrome window of 390px is clamped to a minimum width (screenshot looked cropped); re-tested inside a 390px `<iframe>` | Card fits, text wraps |
+| Student flow | In a scratch clone under bash: branch, `cp`, simulated Copilot edit to template, `git add` of both, `git restore --staged --worktree template.html`, commit | Commit contained only `octocat.html` |
+| Gallery render | Sample cards (default, recolored, malicious script, markdown) served by `python3 -m http.server`, screenshots at 1400px and 500px | Grid renders; responsive |
+| Sandbox | Malicious card in gallery vs. opened directly | Blocked in gallery; runs standalone |
+| Generated HTML | Tag-balance check on empty and populated `index.html` | Pass |
+
+### Not yet verified (needs a real Codespace + second GitHub account)
+- devcontainer build and Live Preview command name in Codespaces
+- Copilot Chat's **Apply** button / Agent mode wording
+- Whether GitHub offers to fork on a 403 push from a Codespace on the upstream repo
+- GitHub Pages deployment and the rendered-markdown links
+- PR template appearing on a fork PR
+
+---
+
+## 8. History
+
+1. **Initial commit** `d73a3b2` — "Initial commit: Set up profiles gallery repository": `.gitignore`, `template.html`, `template.md`, `README.md`. Author identity was auto-derived by git (`GK <773293+gautamk@users.noreply.github.com>`) since no global `user.name` is set.
+2. **Review pass** (TA / principal-engineer lens). Findings, in priority order:
+   1. `<username>` placeholders break when pasted into bash → `YOUR-USERNAME` + examples.
+   2. Live Preview likely missing in Codespaces → devcontainer + `http.server` fallback.
+   3. Copilot prompt depends on chat mode → `cp` first, Copilot edits the open file only.
+   4. `git add .` lets rule violations through → `git status` + explicit `git add`.
+   5. Missing troubleshooting rows → banner fallback, 403 path, bracket errors, Live Preview missing.
+   6. No submission-time guardrail → PR template.
+   7. No actual gallery → Pages + generated `index.html`.
+   - Also: "Why:" line per step, `<title>` edit marker.
+3. **Applied** 1–5, then built 6 and 7, then wrote these docs.

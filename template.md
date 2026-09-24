@@ -1,5 +1,6 @@
 <!--
-  Copy this file to <your-github-username>.md — do not edit template.md directly.
+  Copy this file to YOUR-USERNAME.md — do not edit template.md directly.
+  In the terminal: cp template.md YOUR-USERNAME.md
   Example: if your GitHub username is octocat, create octocat.md
 -->
 
