@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent
-SKIP = {"index.html", "template.html", "template.md", "README.md"}
+SKIP = {"index.html", "template.html", "template.md", "README.md", "AGENTS.md"}
 
 
 def github_repo_url():

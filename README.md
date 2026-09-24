@@ -16,7 +16,7 @@ You'll make your own copy of this repo (a *fork*), create a new branch, add one 
 1. At the top right of this repo's page on GitHub, click **Fork**.
 2. Keep the default settings and click **Create fork**.
 
-You now have your own copy at `github.com/YOUR-USERNAME/profiles-fall-2026`. You'll do all your work there.
+You now have your own copy at `github.com/YOUR-USERNAME/profiles-2026`. You'll do all your work there.
 
 ## 3. Open a Codespace on your fork
 
@@ -63,6 +63,8 @@ Keep the same HTML structure and element IDs. You may change the colors in the :
 ```
 
 If Copilot replies with code instead of changing your file, click **Apply** on its code block (or switch the chat mode to **Agent** and ask again).
+
+**Using an AI agent** (Copilot Agent mode, Claude Code, Gemini CLI, Codex…)? This repo includes a **profile-card skill** that tells it exactly how to build your card. Just say *"Make my profile card"* and answer its questions. It will make the card and then tell you the Git commands to run yourself.
 
 **No Copilot?** No problem — edit the text under each `✏️ EDIT HERE` comment by hand.
 

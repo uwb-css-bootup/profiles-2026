@@ -15,6 +15,7 @@ See also: [INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md) (running the class) and [RE
 | Deliverable per student | One merged pull request adding their own profile card |
 | Workflow | **Fork-based** — students have no write access to the instructor's repo |
 | Environment | GitHub Codespaces in the browser (nothing installed locally) |
+| GitHub repo | `uwb-css-bootup/profiles-2026` (local folder is named `profiles-fall-2026`) |
 | AI assist | GitHub Copilot Chat, with a no-Copilot fallback |
 
 ### Guiding principle: reliability beats cleverness
@@ -38,6 +39,10 @@ With 30 people in a room, every failure mode becomes a queue of raised hands. So
 | `.gitignore` | — | Ignores `.DS_Store`, `Thumbs.db`, `.vscode/` |
 | `.devcontainer/devcontainer.json` | Codespaces | Default universal image + Live Preview extension |
 | `.github/pull_request_template.md` | Students (auto) | Checklist pre-filled into every PR description |
+| `.agents/skills/profile-card/SKILL.md` | AI agents | Cross-tool skill: how an AI builds a student's card |
+| `.agents/skills/profile-card/scripts/check_card.py` | AI agents, students | Validates a card before commit (stdlib only) |
+| `.claude/skills/profile-card` | Claude Code | **Symlink** → `../../.agents/skills/profile-card` |
+| `AGENTS.md` | AI agents (always loaded) | Short guardrails + pointer to the skill |
 | `build_index.py` | Instructor | Regenerates `index.html` from all student cards (stdlib only) |
 | `index.html` | Everyone (via Pages) | Generated gallery page; **never edited by hand** |
 | `.nojekyll` | GitHub Pages | Disables Jekyll so files are served as-is |
@@ -114,7 +119,7 @@ The README is written in a beginner voice, numbered 1–10, each step with a one
 | 2 | Fork the repository | Fork → Create fork |
 | 3 | Open a Codespace on your fork | Check the URL contains your username; Code → Codespaces → Create codespace on main |
 | 4 | Create your branch | `git checkout -b profile-YOUR-USERNAME` + example |
-| 5 | Make your card | `cp template.html YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; hand-edit fallback; `.md` alternative |
+| 5 | Make your card | `cp template.html YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; "Make my profile card" for AI agents (skill); hand-edit fallback; `.md` alternative |
 | 6 | Preview your card | Command Palette → **Live Preview: Show Preview**; fallback `python3 -m http.server 8000` |
 | 7 | Commit and push | `git status` first; `git add YOUR-USERNAME.html` (not `git add .`); commit; `git push origin profile-YOUR-USERNAME`; explains `origin` = your fork |
 | 8 | Open the pull request | Compare & pull request banner (fallback: Contribute → Open pull request); base = instructor `main`, head = fork branch; title `Add YOUR-USERNAME profile`; gallery note |
@@ -187,7 +192,7 @@ The payoff moment: everyone sees their card on one shared page, projected at the
 ### Design
 - **GitHub Pages** serves the repo root from `main`.
 - **`build_index.py`** (Python 3 standard library only; tested on 3.9) regenerates `index.html`. The instructor runs it after merging; students never touch `index.html`, so it can't cause conflicts.
-- Card discovery: every `*.html` / `*.md` file at the repo root **except** `index.html`, `template.html`, `template.md`, `README.md`. Sorted case-insensitively.
+- Card discovery: every `*.html` / `*.md` file at the repo root **except** `index.html`, `template.html`, `template.md`, `README.md`, `AGENTS.md`. Sorted case-insensitively.
 - **HTML cards** are embedded as `<iframe sandbox src="NAME.html" loading="lazy">` in a responsive grid (`repeat(auto-fill, minmax(min(100%, 420px), 1fr))`), each 480px tall with the username as a caption link.
 - **Markdown cards** are shown as a dashed tile linking to GitHub's rendered view (`https://github.com/OWNER/REPO/blob/main/NAME.md`). The repo URL is derived from `git remote get-url origin` (SSH or HTTPS form); if there is no remote, the link falls back to the relative `.md` path.
 - Filenames are HTML-escaped and URL-quoted.
@@ -213,7 +218,63 @@ Iframes are a fixed 480px tall (cards are ~410px). A very long bio scrolls insid
 
 ---
 
-## 7. Verification that was performed
+## 7. AI assistant skill (`profile-card`)
+
+### Goal
+Let a student say *"Make my profile card"* in **any** AI tool and get the same safe, correct result, while still typing the Git commands themselves.
+
+### Format and discovery
+The skill follows the open **Agent Skills** format: a folder whose `SKILL.md` has YAML frontmatter (`name` must equal the folder name, plus a `description` that tells the tool when to use it) and a Markdown body of instructions. Bundled files (here, `scripts/check_card.py`) sit alongside it.
+
+| Tool | Where it looks (repo-level) | How this repo covers it |
+| --- | --- | --- |
+| GitHub Copilot (VS Code agent mode, Copilot CLI) | `.github/skills/`, `.claude/skills/`, `.agents/skills/` | `.agents/skills/profile-card/` |
+| Gemini CLI | `.gemini/skills/` or the `.agents/skills/` alias | `.agents/skills/profile-card/` |
+| OpenAI Codex and other Agent Skills tools | `.agents/skills/` | `.agents/skills/profile-card/` |
+| Claude Code | `.claude/skills/` | Symlink `.claude/skills/profile-card` → `../../.agents/skills/profile-card` |
+| Tools that don't support skills but read `AGENTS.md` | `AGENTS.md` | Root `AGENTS.md` points at the skill and restates the hard rules |
+| Chat-only assistants (no repo access) | — | Student pastes the README §5 prompt; the skill's last section covers this case |
+
+One canonical copy plus a symlink avoids two copies drifting apart. Codespaces (Linux) and macOS handle git symlinks natively.
+
+**Why `AGENTS.md` but no `CLAUDE.md` / `GEMINI.md`:** those files are always loaded, including when the *instructor* uses an agent in this repo. `AGENTS.md` is scoped ("when a student asks…") and short; the full procedure only loads when the skill triggers.
+
+### What the skill makes the agent do
+1. **Rules:** edit only `USERNAME.html`/`.md` at the root; never touch shared files; **never run `git add/commit/push/checkout/switch/branch`** (the student is here to learn Git); no JavaScript or external URLs; keep the five ids; never invent facts about the student.
+2. **Username:** `$GITHUB_USER` (set by Codespaces) → owner of `git remote get-url origin` → ask; always confirm. If `origin` is the instructor's repo, stop and send the student to fork first.
+3. **Branch:** if on `main`, ask the student to run `git checkout -b profile-USERNAME`.
+4. **Details:** ask once for any missing name / role / bio / tech stack / fun fact / optional theme.
+5. **Create:** `cp template.html USERNAME.html` (never retype the template).
+6. **Fill:** text only, field table, HTML-escape `& < >`, one `<li class="badge">` per item, title `Name — Developer Trading Card`.
+7. **Restyle (optional):** only the five `:root` values; ≥ 4.5:1 contrast against `--card`.
+8. **Check:** run `check_card.py` until it prints `OK`.
+9. **Hand off:** preview instructions + the exact `git status / add / commit / push` commands with the username filled in.
+10. **Fallback** for chat-only tools: student pastes the file, the AI returns the complete file.
+
+### `check_card.py`
+Stdlib-only validator; exits 0 with `OK: NAME looks good`, or prints each problem with `✗` and exits 1. It flags:
+- the file is a shared file (`template.*`, `index.html`, `README.md`, `AGENTS.md`)
+- the card isn't in the repo root (compared with the current directory, so run it from the root)
+- any `http://`, `https://`, or `//host` URL
+- leftover placeholder text (`Your Name`, `A sentence or two about who you are`, `something surprising about you`), case-insensitive, **ignoring HTML comments** (the `✏️ EDIT HERE: your name` comment caused a false positive before this)
+- HTML only: `<script>`, any `on…=` attribute, unbalanced tags, and each of the five ids not appearing exactly once
+- extensions other than `.html` / `.md`
+
+### Tested
+| Test | Result |
+| --- | --- |
+| Checker on `template.html` | Rejected as a shared file |
+| Checker on unedited copy (`.html` and `.md`) | Three placeholder errors each |
+| Checker on filled cards (`.html` and `.md`) | `OK` |
+| Checker on card with `<script>`, `https://` image, `onerror`, missing `id="bio"` | All four reported |
+| Checker on card in a subfolder | Rejected |
+| `claude -p` in a copy of the repo: "is there a project skill named profile-card?" | Yes — discovered through the symlink |
+| `claude -p` as a student, with `origin` = instructor repo | Refused and sent the student to fork first |
+| `claude -p` as student `octocat` with details and "green theme", `origin` = fork | Created only `octocat.html`; no commits; `&` escaped; green `:root`; checker `OK`; printed the git commands for the student |
+
+**Not tested:** Copilot, Gemini CLI, and Codex discovering the skill (their docs list `.agents/skills/`); whether Copilot in Codespaces uses skills outside Agent mode.
+
+## 8. Verification that was performed
 
 | Check | Method | Result |
 | --- | --- | --- |
@@ -234,7 +295,7 @@ Iframes are a fixed 480px tall (cards are ~410px). A very long bio scrolls insid
 
 ---
 
-## 8. History
+## 9. History
 
 1. **Initial commit** `d73a3b2` — "Initial commit: Set up profiles gallery repository": `.gitignore`, `template.html`, `template.md`, `README.md`. Author identity was auto-derived by git (`GK <773293+gautamk@users.noreply.github.com>`) since no global `user.name` is set.
 2. **Review pass** (TA / principal-engineer lens). Findings, in priority order:
@@ -246,4 +307,6 @@ Iframes are a fixed 480px tall (cards are ~410px). A very long bio scrolls insid
    6. No submission-time guardrail → PR template.
    7. No actual gallery → Pages + generated `index.html`.
    - Also: "Why:" line per step, `<title>` edit marker.
-3. **Applied** 1–5, then built 6 and 7, then wrote these docs.
+3. **Applied** 1–5, then built 6 and 7, then wrote these docs (commit `1d51382`).
+4. **Cross-tool AI skill** (§7): `.agents/skills/profile-card/` + Claude symlink + `AGENTS.md`; `AGENTS.md` added to `build_index.py`'s skip list so it never appears as a gallery card.
+5. **Repo name fix:** the GitHub repo is `uwb-css-bootup/profiles-2026`, but README §2 said forks would be at `…/profiles-fall-2026`. The student-facing text now says `profiles-2026`; the skill no longer hardcodes a repo name.
