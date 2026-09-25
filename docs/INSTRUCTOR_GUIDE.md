@@ -46,7 +46,7 @@ Walk the student README top to bottom as a student would. Tick each item:
 - [ ] Fork works; fork URL is `github.com/SECOND-ACCOUNT/profiles-2026`
 - [ ] Codespace on the fork builds quickly with the devcontainer (`universal:linux` image, Live Preview extension installed)
 - [ ] Command Palette → **Live Preview: Show Preview** exists and shows the card
-- [ ] `python3 -m http.server 8000` fallback: a **Card preview** panel opens in the editor; clicking `YOUR-USERNAME.html` shows the card
+- [ ] `python3 -m http.server 8000` fallback: a **Card preview** panel opens in the editor; clicking `profiles/` → `YOUR-USERNAME.html` shows the card
 - [ ] Copilot Chat with the README prompt edits **only** the open file (note what the Apply button / mode picker are actually called and fix the README if needed)
 - [ ] Copilot **Agent mode**: "Make my profile card" triggers the `profile-card` skill (from `.agents/skills/`); it creates only the student's file, runs `check_card.py`, and does **not** commit or push
 - [ ] If available, repeat with Gemini CLI or Claude Code in the Codespace terminal
@@ -96,7 +96,7 @@ Because of those bot commits, run `git pull` before you edit anything in your lo
 
 ```bash
 git pull
-python3 build_index.py          # prints e.g. "Wrote index.html with 12 cards."
+python3 build_index.py          # prints e.g. "Wrote index.html with 12 cards from profiles/."
 git add index.html
 git commit -m "Update gallery"
 git push
@@ -111,12 +111,12 @@ git push
 | Symptom | What to tell the student |
 | --- | --- |
 | PR includes a change to `template.html` | In their Codespace: `git restore --source=origin/main template.html`, then `git add template.html`, `git commit -m "Undo template change"`, `git push`. The PR updates automatically. |
-| File named wrong (e.g. `template copy.html`, wrong case) | `git mv "template copy.html" octocat.html`, commit, push. |
+| File named wrong (e.g. `template copy.html`, wrong case) | `git mv "template copy.html" profiles/octocat.html`, commit, push. |
 | Student opened the PR from `main` instead of a branch | Fine for this workshop — review and merge normally. |
 | Student worked in a Codespace on the upstream repo and can't push | Fork, open a Codespace on the fork, recreate the file (copy/paste contents), continue from README §7. |
 | Two PRs from the same student | Close the older one. |
 | PR is an unedited template | Leave a friendly review comment ("Request changes"), which is itself a good teaching moment. |
-| Card fails review for script/URL/missing field | Have them run `python3 .agents/skills/profile-card/scripts/check_card.py USERNAME.html` — it lists every problem. |
+| Card fails review for script/URL/missing field | Have them run `python3 .agents/skills/profile-card/scripts/check_card.py profiles/USERNAME.html` — it lists every problem. |
 | Card looks broken in the gallery | Open the card directly (caption link). Usually a missing closing tag from hand-editing; comment on the PR. |
 
 Every fix is a new commit pushed to the same branch — reinforce that PRs update automatically.

@@ -1,4 +1,4 @@
-"""Build index.html, the gallery page, from every student card in this folder.
+"""Build index.html, the gallery page, from every student card in the CARDS_DIR folder.
 
 Instructor-only. The "Rebuild gallery" GitHub Actions workflow
 (.github/workflows/build-gallery.yml) runs this automatically after every
@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent
-SKIP = {"index.html", "template.html", "template.md", "README.md", "AGENTS.md"}
+CARDS_DIR = "profiles"
 
 
 def github_repo_url():
@@ -34,16 +34,20 @@ def github_repo_url():
 
 
 def find_cards():
+    folder = ROOT / CARDS_DIR
+    if not folder.is_dir():
+        return []
     cards = [
-        path for path in ROOT.iterdir()
-        if path.is_file() and path.suffix in {".html", ".md"} and path.name not in SKIP
+        path for path in folder.iterdir()
+        if path.is_file() and path.suffix in {".html", ".md"}
     ]
     return sorted(cards, key=lambda path: path.name.lower())
 
 
 def card_html(path, repo_url):
     name = html.escape(path.stem)
-    src = html.escape(quote(path.name))
+    rel = path.relative_to(ROOT).as_posix()
+    src = html.escape(quote(rel))
     if path.suffix == ".html":
         # sandbox (with no allow-* flags) blocks any scripts in a student's file.
         return (
@@ -177,7 +181,7 @@ def main():
         body = '    <p class="empty">No cards yet — be the first to open a pull request!</p>'
         count = "0 cards"
     (ROOT / "index.html").write_text(PAGE.format(count=count, body=body), encoding="utf-8")
-    print(f"Wrote index.html with {count}.")
+    print(f"Wrote index.html with {count} from {CARDS_DIR}/.")
 
 
 if __name__ == "__main__":

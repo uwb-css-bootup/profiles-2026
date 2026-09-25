@@ -23,8 +23,8 @@ See also: [INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md) (running the class) and [RE
 With 30 people in a room, every failure mode becomes a queue of raised hands. So:
 
 - **Zero dependencies, no build step, no CI on student PRs.** Nothing to install, nothing to break. The only automation is one post-merge workflow that rebuilds the gallery (§6).
-- **Every student adds a unique new file** (`<their-username>.html`). No two PRs ever touch the same file, so merge conflicts are impossible by construction.
-- **Flat repo layout.** Everything students touch is at the root.
+- **Every student adds a unique new file** (`profiles/<their-username>.html`). No two PRs ever touch the same file, so merge conflicts are impossible by construction.
+- **Cards in `profiles/`, everything else at the root.** Student cards go in `profiles/` so dozens of merged PRs don't bury the root. The templates, README, and `index.html` stay at the root, so students find the templates easily and the Pages URL doesn't change.
 - **Students only ever add one file.** Shared files (templates, README, gallery) are never edited by students.
 
 ---
@@ -34,8 +34,8 @@ With 30 people in a room, every failure mode becomes a queue of raised hands. So
 | Path | Audience | Purpose |
 | --- | --- | --- |
 | `README.md` | Students | Step-by-step workshop guide (10 numbered sections) |
-| `template.html` | Students | The Developer Trading Card; copied to `YOUR-USERNAME.html` |
-| `template.md` | Students | Plain-text fallback card; copied to `YOUR-USERNAME.md` |
+| `template.html` | Students | The Developer Trading Card; copied to `profiles/YOUR-USERNAME.html` |
+| `template.md` | Students | Plain-text fallback card; copied to `profiles/YOUR-USERNAME.md` |
 | `.gitignore` | — | Ignores `.DS_Store`, `Thumbs.db`, `.vscode/` |
 | `.devcontainer/devcontainer.json` | Codespaces | Codespaces' default image (`universal:linux`) + Live Preview extension + port 8000 preview |
 | `.github/pull_request_template.md` | Students (auto) | Checklist pre-filled into every PR description |
@@ -44,12 +44,13 @@ With 30 people in a room, every failure mode becomes a queue of raised hands. So
 | `.agents/skills/profile-card/scripts/check_card.py` | AI agents, students | Validates a card before commit (stdlib only) |
 | `.claude/skills/profile-card` | Claude Code | **Symlink** → `../../.agents/skills/profile-card` |
 | `AGENTS.md` | AI agents (always loaded) | Short guardrails + pointer to the skill |
-| `build_index.py` | Instructor | Regenerates `index.html` from all student cards (stdlib only) |
+| `build_index.py` | Instructor | Regenerates `index.html` from all student cards in `profiles/` (stdlib only) |
+| `profiles/` | Students | One card per student, added via PRs |
 | `index.html` | Everyone (via Pages) | Generated gallery page; **never edited by hand** |
 | `.nojekyll` | GitHub Pages | Disables Jekyll so files are served as-is |
 | `docs/` | Instructor | These notes |
 
-Student files (added via PRs) live at the root: `octocat.html`, `mona.md`, etc.
+Student files (added via PRs) live in `profiles/`: `profiles/octocat.html`, `profiles/mona.md`, etc. The folder name is the `CARDS_DIR` constant in `build_index.py` and `check_card.py`; the workflow trigger and the docs spell it out.
 
 ---
 
@@ -101,7 +102,7 @@ Contrast on the defaults: muted-on-card ≈ 5.7:1, accent-on-card ≈ 7:1 (both 
 </main>
 ```
 - Each of the five fields (plus `<title>`) has a `<!-- ✏️ EDIT HERE: … -->` comment directly above it.
-- A banner comment at the very top says: *Copy this file to YOUR-USERNAME.html — do not edit template.html directly*, with the `cp` command and an `octocat` example.
+- A banner comment at the very top says: *Copy this file to profiles/YOUR-USERNAME.html — do not edit template.html directly*, with the `cp` command and an `octocat` example.
 - Placeholder content is obviously fake ("Your Name", "Computer Science '27") so an unedited card is easy to spot in review.
 - The IDs exist so Copilot (and the verification script) can find fields reliably; the prompt tells Copilot to keep them.
 
@@ -120,9 +121,9 @@ The README is written in a beginner voice, numbered 1–10, each step with a one
 | 2 | Fork the repository | Fork → Create fork |
 | 3 | Open a Codespace on your fork | Check the URL contains your username; Code → Codespaces → Create codespace on main |
 | 4 | Create your branch | `git checkout -b profile-YOUR-USERNAME` + example |
-| 5 | Make your card | `cp template.html YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; "Make my profile card" for AI agents (skill); hand-edit fallback; `.md` alternative |
+| 5 | Make your card | `cp template.html profiles/YOUR-USERNAME.html` first, then Copilot prompt on the open file; Apply/Agent note; "Make my profile card" for AI agents (skill); hand-edit fallback; `.md` alternative |
 | 6 | Preview your card | Command Palette → **Live Preview: Show Preview**; fallback `python3 -m http.server 8000` opens a **Card preview** panel automatically |
-| 7 | Commit and push | `git status` first; `git add YOUR-USERNAME.html` (not `git add .`); commit; `git push origin profile-YOUR-USERNAME`; explains `origin` = your fork |
+| 7 | Commit and push | `git status` first; `git add profiles/YOUR-USERNAME.html` (not `git add .`); commit; `git push origin profile-YOUR-USERNAME`; explains `origin` = your fork |
 | 8 | Open the pull request | Compare & pull request banner (fallback: Contribute → Open pull request); base = instructor `main`, head = fork branch; title `Add YOUR-USERNAME profile`; gallery note |
 | 9 | Rules | Add only your own file; don't edit templates, `index.html`, or others' files |
 | 10 | Troubleshooting | 7-row table (below) |
@@ -152,7 +153,7 @@ Keep the same HTML structure and element IDs. You may change the colors in the :
 ```
 Note: the original workshop spec contained its own prompt text that was not available when this was written. Replace the prompt above if you have the canonical one.
 
-### Why `git status` + `git add YOUR-USERNAME.html` instead of `git add .`
+### Why `git status` + `git add profiles/YOUR-USERNAME.html` instead of `git add .`
 `git add .` silently stages an accidental edit to `template.html`, after which the plain `git restore template.html` fix no longer works (the change is staged). Explicit staging enforces the "only your file" rule and teaches what the staging area is for. `git status` before committing is the single most valuable habit this workshop can teach.
 
 ### Why a devcontainer
@@ -200,7 +201,7 @@ Python is only used for `http.server` and `check_card.py`, which `universal` cov
 ## 5. Pull request template
 
 `.github/pull_request_template.md` pre-fills every PR description with a four-item checklist:
-- only one file added (`YOUR-USERNAME.html` or `.md`)
+- only one file added (`profiles/YOUR-USERNAME.html` or `.md`)
 - filename matches GitHub username
 - card previewed
 - title is `Add YOUR-USERNAME profile`
@@ -219,19 +220,20 @@ The payoff moment: everyone sees their card on one shared page, projected at the
 ### Design
 - **GitHub Pages** serves the repo root from `main`.
 - **`build_index.py`** (Python 3 standard library only; tested on 3.9) regenerates `index.html`. A workflow runs it after merging (see below); students never touch `index.html`, so it can't cause conflicts.
-- Card discovery: every `*.html` / `*.md` file at the repo root **except** `index.html`, `template.html`, `template.md`, `README.md`, `AGENTS.md`. Sorted case-insensitively.
-- **HTML cards** are embedded as `<iframe sandbox src="NAME.html" loading="lazy">` in a responsive grid (`repeat(auto-fill, minmax(min(100%, 420px), 1fr))`), each 480px tall with the username as a caption link.
-- **Markdown cards** are shown as a dashed tile linking to GitHub's rendered view (`https://github.com/OWNER/REPO/blob/main/NAME.md`). The repo URL is derived from `git remote get-url origin` (SSH or HTTPS form); if there is no remote, the link falls back to the relative `.md` path.
+- Card discovery: every `*.html` / `*.md` file in `profiles/` (the `CARDS_DIR` constant). No skip list is needed because shared files never live there. A missing folder means zero cards. Sorted case-insensitively.
+- **HTML cards** are embedded as `<iframe sandbox src="profiles/NAME.html" loading="lazy">` in a responsive grid (`repeat(auto-fill, minmax(min(100%, 420px), 1fr))`), each 480px tall with the username as a caption link.
+- **Markdown cards** are shown as a dashed tile linking to GitHub's rendered view (`https://github.com/OWNER/REPO/blob/main/profiles/NAME.md`). The repo URL is derived from `git remote get-url origin` (SSH or HTTPS form); if there is no remote, the link falls back to the relative `.md` path.
 - Filenames are HTML-escaped and URL-quoted.
 - Empty state: "No cards yet — be the first to open a pull request!" and a "0 cards" count.
 - Gallery uses the same five-color palette as the card.
 - Output header comment: `<!-- Generated by build_index.py — do not edit by hand. -->`.
 
 ### Why a post-merge workflow
-`.github/workflows/build-gallery.yml` runs on every push to `main` that touches a root `*.html`/`*.md` file or `build_index.py` (excluding `index.html`), plus a manual **Run workflow** button. It runs `build_index.py` and, only if `index.html` changed, commits it as `github-actions[bot]` ("Update gallery") and pushes; Pages then redeploys.
+`.github/workflows/build-gallery.yml` runs on every push to `main` that touches `profiles/**` or `build_index.py`, plus a manual **Run workflow** button. It runs `build_index.py` and, only if `index.html` changed, commits it as `github-actions[bot]` ("Update gallery") and pushes; Pages then redeploys.
 - It never runs on PRs, so it can't block or confuse students — the "no CI on student PRs" principle holds.
 - It only ever writes `index.html` on `main`.
-- No loop: pushes made with `GITHUB_TOKEN` don't trigger workflows, and `!index.html` excludes the bot's commit anyway.
+- No loop: pushes made with `GITHUB_TOKEN` don't trigger workflows, and the bot's commit only touches `index.html`, which isn't in the trigger paths anyway.
+- `on.paths` can't use expressions or variables, so `profiles/**` is written out, with a comment to keep it in sync with `CARDS_DIR`.
 - `concurrency` (no cancel) plus `git pull --rebase` before pushing handles back-to-back merges during class.
 - Needs **Read and write** workflow permissions ([INSTRUCTOR_GUIDE.md §1.3](INSTRUCTOR_GUIDE.md#13-recommended-repo-settings)). Running `build_index.py` by hand still works as a fallback.
 
@@ -275,11 +277,11 @@ One canonical copy plus a symlink avoids two copies drifting apart. Codespaces (
 **Why `AGENTS.md` but no `CLAUDE.md` / `GEMINI.md`:** those files are always loaded, including when the *instructor* uses an agent in this repo. `AGENTS.md` is scoped ("when a student asks…") and short; the full procedure only loads when the skill triggers.
 
 ### What the skill makes the agent do
-1. **Rules:** edit only `USERNAME.html`/`.md` at the root; never touch shared files; **never run `git add/commit/push/checkout/switch/branch`** (the student is here to learn Git); no JavaScript or external URLs; keep the five ids; never invent facts about the student.
+1. **Rules:** edit only `profiles/USERNAME.html`/`.md`; never touch shared files; **never run `git add/commit/push/checkout/switch/branch`** (the student is here to learn Git); no JavaScript or external URLs; keep the five ids; never invent facts about the student.
 2. **Username:** `$GITHUB_USER` (set by Codespaces) → owner of `git remote get-url origin` → ask; always confirm. If `origin` is the instructor's repo, stop and send the student to fork first.
 3. **Branch:** if on `main`, ask the student to run `git checkout -b profile-USERNAME`.
 4. **Details:** ask once for any missing name / role / bio / tech stack / fun fact / optional theme.
-5. **Create:** `cp template.html USERNAME.html` (never retype the template).
+5. **Create:** `cp template.html profiles/USERNAME.html` (never retype the template).
 6. **Fill:** text only, field table, HTML-escape `& < >`, one `<li class="badge">` per item, title `Name — Developer Trading Card`.
 7. **Restyle (optional):** only the five `:root` values; ≥ 4.5:1 contrast against `--card`.
 8. **Check:** run `check_card.py` until it prints `OK`.
@@ -289,7 +291,7 @@ One canonical copy plus a symlink avoids two copies drifting apart. Codespaces (
 ### `check_card.py`
 Stdlib-only validator; exits 0 with `OK: NAME looks good`, or prints each problem with `✗` and exits 1. It flags:
 - the file is a shared file (`template.*`, `index.html`, `README.md`, `AGENTS.md`)
-- the card isn't in the repo root (compared with the current directory, so run it from the root)
+- the card isn't in `profiles/` (compared with `profiles/` under the current directory, so run it from the repo root)
 - any `http://`, `https://`, or `//host` URL
 - leftover placeholder text (`Your Name`, `A sentence or two about who you are`, `something surprising about you`), case-insensitive, **ignoring HTML comments** (the `✏️ EDIT HERE: your name` comment caused a false positive before this)
 - HTML only: `<script>`, any `on…=` attribute, unbalanced tags, and each of the five ids not appearing exactly once

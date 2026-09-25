@@ -1,6 +1,6 @@
 """Check a student's profile card before they commit it.
 
-Usage: python3 .agents/skills/profile-card/scripts/check_card.py YOUR-USERNAME.html
+Usage: python3 .agents/skills/profile-card/scripts/check_card.py profiles/YOUR-USERNAME.html
 
 Prints every problem found and exits 1, or prints "OK" and exits 0.
 Uses only the Python standard library.
@@ -13,6 +13,7 @@ from pathlib import Path
 
 FIELDS = ["student-name", "role-or-major", "bio", "tech-stack", "fun-fact"]
 PROTECTED = {"template.html", "template.md", "index.html", "README.md", "AGENTS.md"}
+CARDS_DIR = "profiles"  # keep in sync with build_index.py
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 PLACEHOLDERS = ["Your Name", "A sentence or two about who you are", "something surprising about you"]
 
@@ -45,9 +46,9 @@ class CardParser(HTMLParser):
 def check(path):
     problems = []
     if path.name in PROTECTED:
-        return [f"{path.name} is a shared file; your card should be YOUR-USERNAME{path.suffix}"]
-    if path.parent.resolve() != Path.cwd().resolve():
-        problems.append("the card must be in the top folder of the repo")
+        return [f"{path.name} is a shared file; your card should be {CARDS_DIR}/YOUR-USERNAME{path.suffix}"]
+    if path.parent.resolve() != (Path.cwd() / CARDS_DIR).resolve():
+        problems.append(f"the card must be in the {CARDS_DIR}/ folder (run this from the repo root)")
     text = path.read_text(encoding="utf-8")
     if re.search(r"(https?:)?//[a-z0-9]", text, re.I):
         problems.append("external links/URLs are not allowed (no http://, https://, or //)")
