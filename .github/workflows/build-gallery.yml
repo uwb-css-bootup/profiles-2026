@@ -1,0 +1,40 @@
+name: Rebuild gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.html"
+      - "*.md"
+      - "build_index.py"
+      - "!index.html"
+  workflow_dispatch:        # manual "Run workflow" button as a fallback
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-gallery
+  cancel-in-progress: false  # several quick merges run one after another, each finishes
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python3 build_index.py
+      - name: Commit index.html if it changed
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "Gallery already up to date."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Update gallery"
+          git pull --rebase origin main
+          git push

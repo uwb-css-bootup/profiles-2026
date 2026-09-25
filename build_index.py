@@ -1,6 +1,8 @@
 """Build index.html, the gallery page, from every student card in this folder.
 
-Instructor-only. Run after merging PRs, then commit and push index.html:
+Instructor-only. The "Rebuild gallery" GitHub Actions workflow
+(.github/workflows/build-gallery.yml) runs this automatically after every
+merge to main and commits index.html. Running it by hand is optional:
 
     python3 build_index.py
     git add index.html && git commit -m "Update gallery" && git push

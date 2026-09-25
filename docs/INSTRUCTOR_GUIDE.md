@@ -24,7 +24,8 @@ The repo must be **public** so students can fork it and so Pages is free. If you
 
 ### 1.3 Recommended repo settings
 - **Settings → General → Pull Requests**: allow **Squash merging** (one clean commit per student). Disabling the others is optional.
-- No branch protection or CI needed — students can't push to your repo anyway.
+- **Settings → Actions → General → Workflow permissions**: choose **Read and write permissions** → Save. The "Rebuild gallery" workflow needs this to commit `index.html`; without it its push fails with a 403.
+- No branch protection needed — students can't push to your repo anyway. If you add protection that requires PRs on `main`, allow `github-actions[bot]` to bypass it, or the gallery workflow can't push.
 
 ### 1.4 Send the pre-class email
 Codespace creation and Copilot sign-in are the two biggest time sinks if done live. Suggested text:
@@ -53,9 +54,9 @@ Walk the student README top to bottom as a student would. Tick each item:
 - [ ] Compare & pull request banner appears; base/head are correct
 - [ ] PR description is pre-filled with the checklist from `.github/pull_request_template.md`
 - [ ] Open a Codespace on **your** (upstream) repo from the second account and try to push: record what actually happens (fork offer? 403?) and update README §10 row 3 to match
-- [ ] Merge the PR, run the gallery update (§4 below), confirm the card appears on Pages
+- [ ] Merge the PR; within about a minute an "Update gallery" commit from `github-actions[bot]` appears on `main` (Actions tab → "Rebuild gallery"), and the card appears on Pages. Confirm the bot's commit did not start a second run
 - [ ] Add a `.md` card too and confirm its gallery tile links to GitHub's rendered view
-- [ ] Delete the rehearsal cards and rebuild the index before class
+- [ ] Delete the rehearsal cards before class (the workflow removes them from the gallery)
 
 ---
 
@@ -68,7 +69,7 @@ Walk the student README top to bottom as a student would. Tick each item:
 | 0:25–0:45 | README §5–§6: make and preview the card | Circulate. Most common issue: editing `template.html` instead of their copy |
 | 0:45–0:55 | README §7: `git status`, add, commit, push | Project your own terminal. Stress `git status` |
 | 0:55–1:05 | README §8: open PRs | Watch PRs arrive on the projector |
-| 1:05–1:20 | Live code review + merge + gallery updates | Review 2–3 PRs on screen (Files changed tab, leave a comment, approve). Merge in batches, rebuild the gallery |
+| 1:05–1:20 | Live code review + merge + gallery updates | Review 2–3 PRs on screen (Files changed tab, leave a comment, approve). The gallery rebuilds itself after each merge |
 | 1:20–1:30 | Gallery reveal; wrap-up; delete Codespaces | Project the Pages URL |
 
 Leave slack: the timeline above assumes the pre-class email was followed.
@@ -86,8 +87,12 @@ Leave slack: the timeline above assumes the pre-class email was followed.
 ### Merging
 Use **Squash and merge**. Because every PR adds a unique file, PRs never conflict and can be merged in any order — even if the student's fork is out of date.
 
-### Updating the gallery (after each batch of merges)
-In your local clone:
+### Updating the gallery (automatic)
+Every merge to `main` triggers the **Rebuild gallery** workflow (`.github/workflows/build-gallery.yml`). It runs `build_index.py` and, if the card list changed, commits `index.html` as `github-actions[bot]` with the message "Update gallery". Pages then redeploys; after about a minute, refresh the projected page. Back-to-back merges queue up and each run finishes.
+
+Because of those bot commits, run `git pull` before you edit anything in your local clone.
+
+**If a run fails** (Actions tab → Rebuild gallery → red ✗): usually the workflow permission from §1.3 is missing. Fix it, then click **Run workflow** to rerun. Manual fallback, in your local clone:
 
 ```bash
 git pull
@@ -97,7 +102,7 @@ git commit -m "Update gallery"
 git push
 ```
 
-Pages redeploys in about a minute; refresh the projected page. `build_index.py` needs Python 3 only (standard library), and must be run from a clone that has an `origin` remote pointing at GitHub so markdown-card links resolve.
+`build_index.py` needs Python 3 only (standard library), and must be run from a clone that has an `origin` remote pointing at GitHub so markdown-card links resolve.
 
 ---
 
@@ -121,6 +126,6 @@ Every fix is a new commit pushed to the same branch — reinforce that PRs updat
 ## 6. After class
 
 - Remind students to **delete their Codespace** (github.com/codespaces) — idle Codespaces consume their free monthly hours and storage.
-- Merge any stragglers and rebuild the gallery one last time.
+- Merge any stragglers; check the last "Rebuild gallery" run succeeded.
 - Optionally archive the repo (Settings → Archive) to freeze it.
 - For a future term: copy the repo (see [REBUILD.md](REBUILD.md)), rename it (e.g. `profiles-winter-2027`) and update the name in `README.md` §2 and the headings in `README.md` and `build_index.py`.
