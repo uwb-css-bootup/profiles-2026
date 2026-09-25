@@ -27,7 +27,9 @@ profiles-fall-2026/              (GitHub repo: uwb-css-bootup/profiles-2026)
 ├── .devcontainer/
 │   └── devcontainer.json
 ├── .github/
-│   └── pull_request_template.md
+│   ├── pull_request_template.md
+│   └── workflows/
+│       └── build-gallery.yml   (rebuilds index.html after each merge)
 ├── docs/
 │   ├── DESIGN.md
 │   ├── INSTRUCTOR_GUIDE.md
@@ -127,6 +129,54 @@ SHA-256: `c862dee5cac8d022ea2c17a1bd69cde875470c6bd04572da92ccb5f3b920abbc`
 - [ ] The file name matches my GitHub username
 - [ ] I previewed my card and it looks right
 - [ ] The PR title is `Add YOUR-USERNAME profile`
+````
+
+### `.github/workflows/build-gallery.yml`
+
+SHA-256: `d2fa177e6414a3218945aae40414f6feb13e7dff42d15ac3adb0d8e39ab138d7`
+
+<!-- FILE: .github/workflows/build-gallery.yml -->
+````yaml
+name: Rebuild gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.html"
+      - "*.md"
+      - "build_index.py"
+      - "!index.html"
+  workflow_dispatch:        # manual "Run workflow" button as a fallback
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-gallery
+  cancel-in-progress: false  # several quick merges run one after another, each finishes
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: python3 build_index.py
+      - name: Commit index.html if it changed
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "Gallery already up to date."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Update gallery"
+          git pull --rebase origin main
+          git push
 ````
 
 ### `.agents/skills/profile-card/SKILL.md`
@@ -682,13 +732,15 @@ Something surprising about you goes here.
 
 ### `build_index.py`
 
-SHA-256: `b4800343bb9da2ad3295a3f5aaf861429d8e57335c4aeca3986abc7ee24b12c7`
+SHA-256: `f38fe9e37738e10cabc32b1f60ef2a503b4afcf42cf50d2faca089f1047ea04d`
 
 <!-- FILE: build_index.py -->
 ````python
 """Build index.html, the gallery page, from every student card in this folder.
 
-Instructor-only. Run after merging PRs, then commit and push index.html:
+Instructor-only. The "Rebuild gallery" GitHub Actions workflow
+(.github/workflows/build-gallery.yml) runs this automatically after every
+merge to main and commits index.html. Running it by hand is optional:
 
     python3 build_index.py
     git add index.html && git commit -m "Update gallery" && git push
@@ -912,7 +964,8 @@ Delete `extract.py` afterwards; it is not part of the repo.
 ### 6.1 Checksums
 ```bash
 shasum -a 256 .gitignore .nojekyll .devcontainer/devcontainer.json \
-  .github/pull_request_template.md .agents/skills/profile-card/SKILL.md \
+  .github/pull_request_template.md .github/workflows/build-gallery.yml \
+  .agents/skills/profile-card/SKILL.md \
   .agents/skills/profile-card/scripts/check_card.py AGENTS.md README.md \
   template.html template.md build_index.py index.html
 readlink .claude/skills/profile-card     # → ../../.agents/skills/profile-card
