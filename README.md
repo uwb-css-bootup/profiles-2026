@@ -40,15 +40,15 @@ Example: `git checkout -b profile-octocat`
 
 ## 5. Make your card
 
-First, copy the template to a new file named after you:
+First, copy the template into the `profiles/` folder, as a new file named after you:
 
 ```bash
-cp template.html YOUR-USERNAME.html
+cp template.html profiles/YOUR-USERNAME.html
 ```
 
-Example: `cp template.html octocat.html`
+Example: `cp template.html profiles/octocat.html`
 
-Then open **your** file (`YOUR-USERNAME.html`, not `template.html`) from the file explorer.
+Then open **your** file (`profiles/YOUR-USERNAME.html`, not `template.html`) from the file explorer.
 
 **With Copilot Chat:** open Copilot Chat (the chat icon in the sidebar) and paste this prompt, filling in your details:
 
@@ -68,16 +68,16 @@ If Copilot replies with code instead of changing your file, click **Apply** on i
 
 **No Copilot?** No problem — edit the text under each `✏️ EDIT HERE` comment by hand.
 
-Prefer plain text? Use `cp template.md YOUR-USERNAME.md` instead and edit that file.
+Prefer plain text? Use `cp template.md profiles/YOUR-USERNAME.md` instead and edit that file.
 
 ## 6. Preview your card
 
-1. Open `YOUR-USERNAME.html`.
+1. Open `profiles/YOUR-USERNAME.html`.
 2. Open the Command Palette (`Ctrl+Shift+P`, or `Cmd+Shift+P` on Mac) and run **Live Preview: Show Preview**.
 
 Your card appears in a panel next to the code and updates as you save.
 
-*Fallback:* in the terminal, run `python3 -m http.server 8000`. A **Card preview** panel opens inside the editor with a list of files — click `YOUR-USERNAME.html`. (No panel? Open the **Ports** tab at the bottom and click the globe icon next to port 8000.) Press `Ctrl+C` in the terminal to stop the server.
+*Fallback:* in the terminal, run `python3 -m http.server 8000`. A **Card preview** panel opens inside the editor with a list of files — click `profiles/`, then `YOUR-USERNAME.html`. (No panel? Open the **Ports** tab at the bottom and click the globe icon next to port 8000.) Press `Ctrl+C` in the terminal to stop the server.
 
 ## 7. Commit and push
 
@@ -89,12 +89,12 @@ In the terminal, first check what changed:
 git status
 ```
 
-You should see **only** `YOUR-USERNAME.html` (or `.md`) listed. If anything else shows up, see [Troubleshooting](#10-troubleshooting).
+You should see **only** `profiles/YOUR-USERNAME.html` (or `.md`) listed. If anything else shows up, see [Troubleshooting](#10-troubleshooting).
 
 Then add **just your file**, commit, and push:
 
 ```bash
-git add YOUR-USERNAME.html
+git add profiles/YOUR-USERNAME.html
 git commit -m "Add YOUR-USERNAME profile"
 git push origin profile-YOUR-USERNAME
 ```
@@ -102,7 +102,7 @@ git push origin profile-YOUR-USERNAME
 Example:
 
 ```bash
-git add octocat.html
+git add profiles/octocat.html
 git commit -m "Add octocat profile"
 git push origin profile-octocat
 ```
@@ -125,7 +125,7 @@ Once your PR is merged, your card will appear on the class gallery page — your
 
 ## 9. Rules
 
-- ✅ Only **add your own file** (`YOUR-USERNAME.html` or `YOUR-USERNAME.md`).
+- ✅ Only **add your own file** in the `profiles/` folder (`profiles/YOUR-USERNAME.html` or `profiles/YOUR-USERNAME.md`).
 - ❌ Don't edit `template.html`, `template.md`, or `index.html` (the gallery page — your instructor updates it).
 - ❌ Don't edit anyone else's file.
 
@@ -140,5 +140,6 @@ Following these rules means no two PRs ever touch the same file — so no merge 
 | `push` rejected / "permission denied" / 403 | Your Codespace is on the **original repo**, not your fork. If the Codespace offers to create a fork for you, accept it. Otherwise: fork (step 2), open a new Codespace from **your fork**, and copy your file over. Ask an instructor if you're stuck. |
 | No **Compare & pull request** banner | The banner disappears after a while. On your fork, click **Contribute** → **Open pull request**. |
 | I committed on `main` by accident | Run `git checkout -b profile-YOUR-USERNAME` — your new branch keeps the commit. Then push that branch (step 7). |
+| `git status` shows `YOUR-USERNAME.html` outside the `profiles/` folder | Move it: `git mv YOUR-USERNAME.html profiles/` (or `mv` if you haven't run `git add` yet). Cards outside `profiles/` don't show up in the gallery. |
 | Live Preview command not found | Use the `python3 -m http.server 8000` fallback in step 6. |
 | My PR shows changes to other files | Only your own file should be in the PR. Ask an instructor for help. |

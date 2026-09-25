@@ -3,11 +3,9 @@ name: Rebuild gallery
 on:
   push:
     branches: [main]
-    paths:
-      - "*.html"
-      - "*.md"
+    paths:                  # keep in sync with CARDS_DIR in build_index.py
+      - "profiles/**"
       - "build_index.py"
-      - "!index.html"
   workflow_dispatch:        # manual "Run workflow" button as a fallback
 
 permissions:

@@ -1,6 +1,6 @@
 ---
 name: profile-card
-description: Create, fill in, or restyle a student's Developer Trading Card (YOUR-USERNAME.html or YOUR-USERNAME.md) in the profiles gallery Git/GitHub workshop repo. Use when a student asks to make, fill in, update, fix, or change the colors of their profile card.
+description: Create, fill in, or restyle a student's Developer Trading Card (profiles/YOUR-USERNAME.html or profiles/YOUR-USERNAME.md) in the profiles gallery Git/GitHub workshop repo. Use when a student asks to make, fill in, update, fix, or change the colors of their profile card.
 ---
 
 # Profile Card
@@ -9,7 +9,7 @@ You are helping a student in a live Git/GitHub workshop add their own profile ca
 
 ## Rules (never break these)
 
-1. Only create or edit **one** file: the student's own card at the repo root, `USERNAME.html` (or `USERNAME.md`), where `USERNAME` is their GitHub username.
+1. Only create or edit **one** file: the student's own card in the `profiles/` folder, `profiles/USERNAME.html` (or `profiles/USERNAME.md`), where `USERNAME` is their GitHub username.
 2. Never modify `template.html`, `template.md`, `index.html`, `README.md`, `AGENTS.md`, `build_index.py`, anything in `.github/`, `.agents/`, `.claude/`, `docs/`, or another student's card.
 3. Never run `git add`, `git commit`, `git push`, `git checkout`, `git switch`, or `git branch`. Tell the student the exact command instead.
 4. No JavaScript: no `<script>` tags and no `on…=` attributes.
@@ -44,13 +44,13 @@ Ask in **one** message for anything they haven't given you:
 - *(optional)* a color theme
 
 ### 4. Create the file
-If `USERNAME.html` doesn't exist yet, copy the template exactly — don't retype it:
+If `profiles/USERNAME.html` doesn't exist yet, copy the template exactly — don't retype it:
 
 ```bash
-cp template.html USERNAME.html
+cp template.html profiles/USERNAME.html
 ```
 
-If the file already exists, edit it in place. For a plain-text card, use `template.md` → `USERNAME.md` instead.
+If the file already exists, edit it in place. For a plain-text card, use `template.md` → `profiles/USERNAME.md` instead.
 
 ### 5. Fill in the fields (HTML)
 Replace **only the text content**, keeping every tag, id, and class:
@@ -76,7 +76,7 @@ Change **only** the five values in the `:root` block (`--bg`, `--card`, `--text`
 Run:
 
 ```bash
-python3 .agents/skills/profile-card/scripts/check_card.py USERNAME.html
+python3 .agents/skills/profile-card/scripts/check_card.py profiles/USERNAME.html
 ```
 
 Fix every problem it reports and run it again until it prints `OK`.
@@ -84,11 +84,11 @@ Fix every problem it reports and run it again until it prints `OK`.
 ### 8. Hand off to the student
 Tell the student, with their real username filled in:
 
-1. Preview: Command Palette → **Live Preview: Show Preview** (or `python3 -m http.server 8000` and open `/USERNAME.html`).
+1. Preview: Command Palette → **Live Preview: Show Preview** (or `python3 -m http.server 8000` and open `/profiles/USERNAME.html`).
 2. Then run these themselves:
    ```bash
    git status
-   git add USERNAME.html
+   git add profiles/USERNAME.html
    git commit -m "Add USERNAME profile"
    git push origin profile-USERNAME
    ```
@@ -97,4 +97,4 @@ Tell the student, with their real username filled in:
 Do not run these commands for them.
 
 ## If you can't edit files or run commands
-(For example, a chat-only assistant.) Ask the student to run `cp template.html USERNAME.html` and paste the file contents to you. Reply with the **complete** updated file for them to paste back, following every rule above, and tell them to run the check in step 7.
+(For example, a chat-only assistant.) Ask the student to run `cp template.html profiles/USERNAME.html` and paste the file contents to you. Reply with the **complete** updated file for them to paste back, following every rule above, and tell them to run the check in step 7.

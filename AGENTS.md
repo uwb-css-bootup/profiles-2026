@@ -1,6 +1,6 @@
 # Instructions for AI assistants
 
-This repo is a Git/GitHub workshop. Students each add **one** profile card file named after their GitHub username (`USERNAME.html` or `USERNAME.md`) and open a pull request.
+This repo is a Git/GitHub workshop. Students each add **one** profile card file named after their GitHub username (`profiles/USERNAME.html` or `profiles/USERNAME.md`) and open a pull request.
 
 When a student asks for help with their profile card, follow the skill in `.agents/skills/profile-card/SKILL.md`.
 
