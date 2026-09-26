@@ -117,7 +117,7 @@ git push
 | Two PRs from the same student | Close the older one. |
 | PR is an unedited template | Leave a friendly review comment ("Request changes"), which is itself a good teaching moment. |
 | Card fails review for script/URL/missing field | Have them run `python3 .agents/skills/profile-card/scripts/check_card.py profiles/USERNAME.html` — it lists every problem. |
-| Card looks broken in the gallery | Open the card directly (caption link). Usually a missing closing tag from hand-editing; comment on the PR. |
+| Card looks broken in the gallery | Open the card directly (caption's "Open card" link). Usually a missing closing tag from hand-editing; comment on the PR. |
 
 Every fix is a new commit pushed to the same branch — reinforce that PRs update automatically.
 
