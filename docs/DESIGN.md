@@ -1,7 +1,7 @@
 # Design Notes — Profiles Gallery (Fall 2026)
 
 Instructor-facing. Explains **what** is in this repo and **why** each decision was made.
-See also: [INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md) (running the class) and [REBUILD.md](REBUILD.md) (exact file contents to recreate the repo).
+See also: [INSTRUCTOR_GUIDE.md](INSTRUCTOR_GUIDE.md) (running the class) and [REBUILD.md](REBUILD.md) (how the repo was built, step by step).
 
 ---
 
@@ -183,7 +183,7 @@ Python is only used for `http.server` and `check_card.py`, which `universal` cov
 - `forwardPorts` — `portsAttributes` applies when the port is auto-detected, so nothing is forwarded until the student actually starts the server.
 - `postCreateCommand`, features, `hostRequirements` — nothing to install; the default 2-core machine is plenty and conserves students' free Codespaces hours.
 
-**Re-check before each term:** run [REBUILD.md §6.7](REBUILD.md#67-devcontainer-image-check) to see which version `universal:linux` currently is, and rehearse in a real Codespace.
+**Re-check before each term:** run [REBUILD.md §5.6](REBUILD.md#56-devcontainer-image-check) to see which version `universal:linux` currently is, and rehearse in a real Codespace.
 
 ### Troubleshooting table (README §10)
 | Problem | Fix |
