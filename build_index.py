@@ -13,11 +13,13 @@ Uses only the Python standard library.
 import html
 import re
 import subprocess
+import zlib
 from pathlib import Path
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent
 CARDS_DIR = "profiles"
+GITHUB_PROFILE = "https://github.com"  # + "/USERNAME"; cards are named after GitHub usernames
 
 # Show a "your card goes here" placeholder tile until the gallery fills up.
 GHOST_TILE_BELOW = 4
@@ -61,15 +63,22 @@ DOC = (
 )
 
 
-def caption_html(name, href):
-    initial = html.escape(name[:1].upper())
+def avatar_hue(username):
+    """A stable 0-359 hue per username, so each avatar gets its own color."""
+    return zlib.crc32(username.lower().encode("utf-8")) % 360
+
+
+def caption_html(path, href):
+    name = html.escape(path.stem)
+    initial = html.escape(path.stem[:1].upper())
+    profile = html.escape(f"{GITHUB_PROFILE}/{quote(path.stem)}")
     return (
-        f'<figcaption>\n'
-        f'    <a class="who" href="{href}">\n'
-        f'      <span class="avatar" aria-hidden="true">{initial}</span>\n'
+        f'<figcaption class="who">\n'
+        f'    <a class="person" href="{profile}" title="{name} on GitHub">\n'
+        f'      <span class="avatar" style="--hue: {avatar_hue(path.stem)}" aria-hidden="true">{initial}</span>\n'
         f'      <span class="name">{name}</span>\n'
-        f'      <span class="open">Open card {ARROW}</span>\n'
         f'    </a>\n'
+        f'    <a class="open" href="{href}">Open card {ARROW}</a>\n'
         f'  </figcaption>'
     )
 
@@ -83,9 +92,10 @@ def card_html(path, repo_url):
         return (
             f'<figure class="tile">\n'
             f'  <div class="stage">\n'
-            f'    <iframe sandbox src="{src}" title="{name}\'s card" loading="lazy"></iframe>\n'
+            # tabindex="-1": the caption's "Open card" link is the keyboard stop for this tile.
+            f'    <iframe sandbox src="{src}" title="{name}\'s card" loading="lazy" tabindex="-1"></iframe>\n'
             f'  </div>\n'
-            f'  {caption_html(name, src)}\n'
+            f'  {caption_html(path, src)}\n'
             f'</figure>'
         )
     href = html.escape(f"{repo_url}/blob/main/{src}" if repo_url else src)
@@ -96,7 +106,7 @@ def card_html(path, repo_url):
         f'    <span class="md-title">{name}\'s card</span>\n'
         f'    <span class="md-note">Markdown card &middot; opens on GitHub</span>\n'
         f'  </a>\n'
-        f'  {caption_html(name, href)}\n'
+        f'  {caption_html(path, href)}\n'
         f'</figure>'
     )
 
@@ -247,17 +257,26 @@ PAGE = """<!DOCTYPE html>
 
     /* ---------- Caption ---------- */
 
-    figcaption {
-      padding: 0 0.25rem;
-    }
-
     .who {
       display: flex;
       align-items: center;
       gap: 0.7rem;
-      padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+      padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+    }
+
+    .person {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 0.7rem;
+      min-width: 0;
       border-radius: 999px;
       text-decoration: none;
+    }
+
+    .person:hover .name {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
     }
 
     .avatar {
@@ -267,7 +286,8 @@ PAGE = """<!DOCTYPE html>
       width: 2.75rem;
       height: 2.75rem;
       border-radius: 50%;
-      background: var(--accent);
+      /* --hue is set per student by build_index.py; light enough for dark text. */
+      background: hsl(var(--hue, 199) 80% 70%);
       color: #0b1220;
       font-size: 1.25rem;
       font-weight: 800;
@@ -285,15 +305,18 @@ PAGE = """<!DOCTYPE html>
 
     .open {
       display: inline-flex;
+      flex: none;
       align-items: center;
       gap: 0.3rem;
+      border-radius: 999px;
       color: var(--muted);
       font-size: 1.05rem;
+      text-decoration: none;
       transition: color 0.2s ease;
     }
 
-    .who:hover .open,
-    .who:focus-visible .open {
+    .open:hover,
+    .open:focus-visible {
       color: var(--text);
     }
 

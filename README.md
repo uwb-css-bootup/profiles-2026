@@ -4,7 +4,14 @@ Welcome! In this workshop you'll add your own **developer trading card** to this
 
 ## 1. What you'll do
 
-You'll make your own copy of this repo (a *fork*), create a new branch, add one file with your profile card, and send it back here as a **pull request (PR)**. You're done when your PR is merged and your card is part of the gallery. 🎉
+You'll make your own copy of this repo (a *fork*), create a new branch, add one file with your profile card, and send it back here as a **pull request (PR)**. You're done when your PR is merged and your card is part of the [class gallery](https://uwb-css-bootup.github.io/profiles-2026/). 🎉
+
+| Word | Meaning |
+| --- | --- |
+| **Fork** | Your own copy of someone else's repo, on GitHub. |
+| **Branch** | A separate line of work inside a repo, so `main` stays untouched while you work. |
+| **Commit** | A saved snapshot of your changes, with a message saying what changed. |
+| **Pull request (PR)** | A request to merge your branch into the original repo, where it can be reviewed first. |
 
 > **Replace `YOUR-USERNAME` with your GitHub username** everywhere in this guide.
 > Example: if your username is `octocat`, then `profile-YOUR-USERNAME` becomes `profile-octocat`.
@@ -40,15 +47,23 @@ Example: `git checkout -b profile-octocat`
 
 ## 5. Make your card
 
-First, copy the template into the `profiles/` folder, as a new file named after you:
+First, pick a format and copy its template into the `profiles/` folder, as a new file named after you:
 
-```bash
-cp template.html profiles/YOUR-USERNAME.html
-```
+- **HTML card** (recommended — it shows up live in the gallery):
 
-Example: `cp template.html profiles/octocat.html`
+  ```bash
+  cp template.html profiles/YOUR-USERNAME.html
+  ```
 
-Then open **your** file (`profiles/YOUR-USERNAME.html`, not `template.html`) from the file explorer.
+  Example: `cp template.html profiles/octocat.html`
+
+- **Plain-text card** (Markdown — the gallery links to it on GitHub):
+
+  ```bash
+  cp template.md profiles/YOUR-USERNAME.md
+  ```
+
+Then open **your** file (`profiles/YOUR-USERNAME.html` or `.md`, not the template) from the file explorer and fill it in, using one of the options below.
 
 **With Copilot Chat:** open Copilot Chat (the chat icon in the sidebar) and paste this prompt, filling in your details:
 
@@ -66,11 +81,9 @@ If Copilot replies with code instead of changing your file, click **Apply** on i
 
 **Using an AI agent** (Copilot Agent mode, Claude Code, Gemini CLI, Codex…)? This repo includes a **profile-card skill** that tells it exactly how to build your card. Just say *"Make my profile card"* and answer its questions. It will make the card and then tell you the Git commands to run yourself.
 
-**No Copilot?** No problem — edit the text under each `✏️ EDIT HERE` comment by hand.
+**No Copilot?** No problem — edit the text under each `✏️ EDIT HERE` comment by hand (or, in a `.md` card, replace the example text).
 
-Prefer plain text? Use `cp template.md profiles/YOUR-USERNAME.md` instead and edit that file.
-
-## 6. Preview your card
+## 6. Preview and check your card
 
 1. Open `profiles/YOUR-USERNAME.html`.
 2. Open the Command Palette (`Ctrl+Shift+P`, or `Cmd+Shift+P` on Mac) and run **Live Preview: Show Preview**.
@@ -78,6 +91,14 @@ Prefer plain text? Use `cp template.md profiles/YOUR-USERNAME.md` instead and ed
 Your card appears in a panel next to the code and updates as you save.
 
 *Fallback:* in the terminal, run `python3 -m http.server 8000`. A **Card preview** panel opens inside the editor with a list of files — click `profiles/`, then `YOUR-USERNAME.html`. (No panel? Open the **Ports** tab at the bottom and click the globe icon next to port 8000.) Press `Ctrl+C` in the terminal to stop the server.
+
+Then run the card checker. It catches leftover placeholder text, missing tags, and anything the gallery doesn't allow:
+
+```bash
+python3 .agents/skills/profile-card/scripts/check_card.py profiles/YOUR-USERNAME.html
+```
+
+Fix anything it lists and run it again until it prints `OK`. (For a Markdown card, use `.md` at the end.)
 
 ## 7. Commit and push
 
@@ -121,7 +142,19 @@ Here `origin` is **your fork** — not the original repo. That's exactly where y
 3. Title: `Add YOUR-USERNAME profile`
 4. Click **Create pull request**. Done!
 
-Once your PR is merged, your card will appear on the class gallery page — your instructor will share the link.
+Once your PR is merged, your card will appear on the class gallery: **https://uwb-css-bootup.github.io/profiles-2026/**
+
+### Updating your PR after feedback
+
+If your reviewer asks for changes, you **don't** open a new PR. Edit your file in the same Codespace, on the same branch, then:
+
+```bash
+git add profiles/YOUR-USERNAME.html
+git commit -m "Update YOUR-USERNAME profile"
+git push origin profile-YOUR-USERNAME
+```
+
+Your open PR updates automatically with the new commit — refresh its page to see it.
 
 ## 9. Rules
 
@@ -143,3 +176,5 @@ Following these rules means no two PRs ever touch the same file — so no merge 
 | `git status` shows `YOUR-USERNAME.html` outside the `profiles/` folder | Move it: `git mv YOUR-USERNAME.html profiles/` (or `mv` if you haven't run `git add` yet). Cards outside `profiles/` don't show up in the gallery. |
 | Live Preview command not found | Use the `python3 -m http.server 8000` fallback in step 6. |
 | My PR shows changes to other files | Only your own file should be in the PR. Ask an instructor for help. |
+| The card checker prints `✗` lines | Each line names one problem. Fix them in your file, save, and run the checker again. |
+| My PR was merged but my card isn't in the gallery | The gallery rebuilds itself about 1–2 minutes after a merge. Wait, then hard-refresh (`Ctrl+Shift+R`, or `Cmd+Shift+R` on Mac). |
