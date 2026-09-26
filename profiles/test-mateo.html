@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  Copy this file to profiles/YOUR-USERNAME.html — do not edit template.html directly.
+  In the terminal: cp template.html profiles/YOUR-USERNAME.html
+  Example: if your GitHub username is octocat, create profiles/octocat.html
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- ✏️ EDIT HERE: the text shown in the browser tab -->
+  <title>Mateo García — Developer Trading Card</title>
+  <style>
+    /* Change these five colors to restyle the whole card. */
+    :root {
+      --bg: #0d1b2a;
+      --card: #1b263b;
+      --text: #e0e1dd;
+      --muted: #778da9;
+      --accent: #ffb703;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .card header {
+      border-bottom: 1px solid var(--muted);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .student-name {
+      margin: 0;
+      font-size: 1.75rem;
+      line-height: 1.2;
+    }
+
+    .role-or-major {
+      margin: 0.25rem 0 0;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .bio {
+      margin: 0 0 1.25rem;
+    }
+
+    .card h2 {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .tech-stack {
+      list-style: none;
+      margin: 0 0 1.25rem;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+
+    .card footer {
+      border-top: 1px solid var(--muted);
+      padding-top: 1rem;
+    }
+
+    .fun-fact {
+      margin: 0;
+      color: var(--muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article class="card">
+      <header>
+        <!-- ✏️ EDIT HERE: your name -->
+        <h1 id="student-name" class="student-name">Mateo García</h1>
+        <!-- ✏️ EDIT HERE: your role or major and graduation year -->
+        <p id="role-or-major" class="role-or-major">Computer Science '28</p>
+      </header>
+
+      <section>
+        <!-- ✏️ EDIT HERE: a short bio (1–3 sentences) -->
+        <p id="bio" class="bio">Building small web games in my spare time.</p>
+      </section>
+
+      <section>
+        <h2>Tech Stack</h2>
+        <!-- ✏️ EDIT HERE: one <li class="badge"> per language or tool you use -->
+        <ul id="tech-stack" class="tech-stack">
+          <li class="badge">JavaScript</li>
+          <li class="badge">HTML &amp; CSS</li>
+          <li class="badge">Git</li>
+        </ul>
+      </section>
+
+      <footer>
+        <!-- ✏️ EDIT HERE: one fun fact about you -->
+        <p id="fun-fact" class="fun-fact">Fun fact: I speak three languages and dream in two of them.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>
