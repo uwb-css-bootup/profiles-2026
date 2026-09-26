@@ -19,6 +19,9 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parent
 CARDS_DIR = "profiles"
 
+# Show a "your card goes here" placeholder tile until the gallery fills up.
+GHOST_TILE_BELOW = 4
+
 
 def github_repo_url():
     """Return https://github.com/owner/repo from the origin remote, or None."""
@@ -44,6 +47,33 @@ def find_cards():
     return sorted(cards, key=lambda path: path.name.lower())
 
 
+ARROW = (
+    '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" '
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M5 11 11 5M6 5h5v5"/></svg>'
+)
+
+DOC = (
+    '<svg viewBox="0 0 48 48" width="56" height="56" fill="none" stroke="currentColor" '
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M12 5h16l10 10v27a1 1 0 0 1-1 1H12a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/>'
+    '<path d="M28 5v10h10M17 26h14M17 32h14M17 20h5"/></svg>'
+)
+
+
+def caption_html(name, href):
+    initial = html.escape(name[:1].upper())
+    return (
+        f'<figcaption>\n'
+        f'    <a class="who" href="{href}">\n'
+        f'      <span class="avatar" aria-hidden="true">{initial}</span>\n'
+        f'      <span class="name">{name}</span>\n'
+        f'      <span class="open">Open card {ARROW}</span>\n'
+        f'    </a>\n'
+        f'  </figcaption>'
+    )
+
+
 def card_html(path, repo_url):
     name = html.escape(path.stem)
     rel = path.relative_to(ROOT).as_posix()
@@ -52,16 +82,35 @@ def card_html(path, repo_url):
         # sandbox (with no allow-* flags) blocks any scripts in a student's file.
         return (
             f'<figure class="tile">\n'
-            f'  <iframe sandbox src="{src}" title="{name}\'s card" loading="lazy"></iframe>\n'
-            f'  <figcaption><a href="{src}">{name}</a></figcaption>\n'
+            f'  <div class="stage">\n'
+            f'    <iframe sandbox src="{src}" title="{name}\'s card" loading="lazy"></iframe>\n'
+            f'  </div>\n'
+            f'  {caption_html(name, src)}\n'
             f'</figure>'
         )
-    href = f"{repo_url}/blob/main/{src}" if repo_url else src
+    href = html.escape(f"{repo_url}/blob/main/{src}" if repo_url else src)
     return (
         f'<figure class="tile tile-md">\n'
-        f'  <a class="md-link" href="{html.escape(href)}">📄 {name}\'s card</a>\n'
-        f'  <figcaption><a href="{html.escape(href)}">{name}</a></figcaption>\n'
+        f'  <a class="stage md-link" href="{href}">\n'
+        f'    {DOC}\n'
+        f'    <span class="md-title">{name}\'s card</span>\n'
+        f'    <span class="md-note">Markdown card &middot; opens on GitHub</span>\n'
+        f'  </a>\n'
+        f'  {caption_html(name, href)}\n'
         f'</figure>'
+    )
+
+
+def ghost_html():
+    return (
+        f'<div class="tile tile-ghost">\n'
+        f'  <div class="stage ghost">\n'
+        f'    <span class="ghost-plus" aria-hidden="true">+</span>\n'
+        f'    <span class="ghost-title">Your card goes here</span>\n'
+        f'    <code>profiles/YOUR-USERNAME.html</code>\n'
+        f'    <span class="ghost-note">Fork &rarr; branch &rarr; pull request</span>\n'
+        f'  </div>\n'
+        f'</div>'
     )
 
 
@@ -73,95 +122,279 @@ PAGE = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Profiles Gallery — Fall 2026</title>
   <style>
-    :root {{
+    :root {
       --bg: #0f172a;
       --card: #1e293b;
       --text: #f1f5f9;
       --muted: #94a3b8;
       --accent: #38bdf8;
-    }}
+      --line: rgba(148, 163, 184, 0.28);
+    }
 
-    * {{
+    * {
       box-sizing: border-box;
-    }}
+    }
 
-    body {{
+    body {
       margin: 0;
-      padding: 2rem 1rem;
-      background: var(--bg);
+      min-height: 100vh;
+      padding: clamp(1.5rem, 4vw, 3.5rem) 1.25rem 2.5rem;
+      background-color: var(--bg);
+      background-image: radial-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+      background-size: 26px 26px;
       color: var(--text);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }}
+      line-height: 1.5;
+    }
 
-    header {{
+    a {
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    /* ---------- Header ---------- */
+
+    .hero {
+      max-width: 60rem;
+      margin: 0 auto clamp(2rem, 5vw, 3.5rem);
       text-align: center;
-      margin-bottom: 2rem;
-    }}
+    }
 
-    h1 {{
-      margin: 0;
-    }}
-
-    header p {{
-      margin: 0.5rem 0 0;
+    .kicker {
+      margin: 0 0 0.9rem;
       color: var(--muted);
-    }}
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
 
-    .grid {{
+    h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 7vw, 4.75rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1.5rem 0 0;
+      padding: 0.4rem 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.7);
+      color: var(--muted);
+      font-size: 1.15rem;
+    }
+
+    .count strong {
+      color: var(--text);
+      font-size: 1.35rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- Grid and tiles ---------- */
+
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-      gap: 1.5rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }}
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 440px));
+      justify-content: center;
+      gap: clamp(1.25rem, 3vw, 2rem);
+    }
 
-    .tile {{
+    .tile {
       margin: 0;
       display: flex;
       flex-direction: column;
-    }}
+      gap: 0.75rem;
+    }
 
-    .tile iframe {{
-      width: 100%;
+    .stage {
+      position: relative;
       height: 480px;
-      border: 0;
-      border-radius: 16px;
-    }}
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
 
-    .tile-md .md-link {{
+    .tile:hover .stage,
+    .tile:focus-within .stage {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--accent);
+    }
+
+    .stage iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* ---------- Caption ---------- */
+
+    figcaption {
+      padding: 0 0.25rem;
+    }
+
+    .who {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+      border-radius: 999px;
+      text-decoration: none;
+    }
+
+    .avatar {
       display: grid;
       place-items: center;
-      height: 480px;
-      background: var(--card);
-      border: 2px dashed var(--muted);
-      border-radius: 16px;
-      color: var(--text);
+      flex: none;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0b1220;
       font-size: 1.25rem;
-      text-decoration: none;
-    }}
+      font-weight: 800;
+    }
 
-    figcaption {{
-      text-align: center;
-      margin-top: 0.5rem;
-    }}
+    .name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
 
-    a {{
-      color: var(--accent);
-    }}
-
-    .empty {{
-      text-align: center;
+    .open {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
       color: var(--muted);
-    }}
+      font-size: 1.05rem;
+      transition: color 0.2s ease;
+    }
+
+    .who:hover .open,
+    .who:focus-visible .open {
+      color: var(--text);
+    }
+
+    /* ---------- Markdown and placeholder tiles ---------- */
+
+    .md-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background: var(--card);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .md-title {
+      color: var(--text);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .md-note {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .ghost {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      border: 2px dashed var(--line);
+      background: transparent;
+      box-shadow: none;
+      text-align: center;
+    }
+
+    .ghost-plus {
+      display: grid;
+      place-items: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      border: 2px dashed var(--accent);
+      border-radius: 50%;
+      color: var(--accent);
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .ghost-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .ghost code {
+      padding: 0.2rem 0.6rem;
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--accent);
+      font-size: 1rem;
+    }
+
+    .ghost-note {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .empty {
+      max-width: 32rem;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+      border: 2px dashed var(--line);
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 1.15rem;
+      text-align: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stage,
+      .open {
+        transition: none;
+      }
+
+      .tile:hover .stage,
+      .tile:focus-within .stage {
+        transform: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Profiles Gallery — Fall 2026</h1>
-    <p>{count}</p>
+  <header class="hero">
+    <p class="kicker">UW Bothell &middot; Fall 2026 &middot; Git &amp; GitHub workshop</p>
+    <h1>Profiles <span>Gallery</span></h1>
+    <p class="count"><strong>@@NUMBER@@</strong> @@UNIT@@</p>
   </header>
   <main>
-{body}
+@@BODY@@
   </main>
 </body>
 </html>
@@ -170,18 +403,24 @@ PAGE = """<!DOCTYPE html>
 
 def main():
     cards = find_cards()
+    repo_url = github_repo_url()
     if cards:
-        repo_url = github_repo_url()
-        tiles = "\n".join(card_html(path, repo_url) for path in cards)
+        tiles = [card_html(path, repo_url) for path in cards]
+        if len(cards) < GHOST_TILE_BELOW:
+            tiles.append(ghost_html())
         body = '    <div class="grid">\n' + "\n".join(
-            "      " + line for line in tiles.splitlines()
+            "      " + line for line in "\n".join(tiles).splitlines()
         ) + "\n    </div>"
-        count = f"{len(cards)} card{'s' if len(cards) != 1 else ''}"
     else:
         body = '    <p class="empty">No cards yet — be the first to open a pull request!</p>'
-        count = "0 cards"
-    (ROOT / "index.html").write_text(PAGE.format(count=count, body=body), encoding="utf-8")
-    print(f"Wrote index.html with {count} from {CARDS_DIR}/.")
+    unit = "card" if len(cards) == 1 else "cards"
+    page = (
+        PAGE.replace("@@NUMBER@@", str(len(cards)))
+        .replace("@@UNIT@@", unit)
+        .replace("@@BODY@@", body)
+    )
+    (ROOT / "index.html").write_text(page, encoding="utf-8")
+    print(f"Wrote index.html with {len(cards)} {unit} from {CARDS_DIR}/.")
 
 
 if __name__ == "__main__":
